@@ -22,55 +22,57 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class AopAspectImplementation {
 	@Around(value = "@within(com.example.demo.AopAspects) || @annotation(com.example.demo.AopAspects)")
 	public String aroundAdvice(ProceedingJoinPoint joinPoint) throws Throwable {
-		HttpServletRequest request= ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
-		HttpServletResponse response= ((ServletRequestAttributes)RequestContextHolder.currentRequestAttributes()).getResponse();
-		
-		StringBuilder test= new StringBuilder();
-		
-		MethodSignature signature= (MethodSignature) joinPoint.getSignature();
-		Method method= signature.getMethod();
-		
-		AopAspects aopmethod= method.getAnnotation(AopAspects.class);
-		
-		
-		long startTime= System.currentTimeMillis();
-		Object result=joinPoint.proceed();
-		long endTime= System.currentTimeMillis();
-		
+		HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
+				.getRequest();
+		HttpServletResponse response = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
+				.getResponse();
+
+		StringBuilder test = new StringBuilder();
+
+		MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+		Method method = signature.getMethod();
+
+		AopAspects aopmethod = method.getAnnotation(AopAspects.class);
+
+		long startTime = System.currentTimeMillis();
+		Object result = joinPoint.proceed();
+		long endTime = System.currentTimeMillis();
+
 		String methodName = method.getName();
-		String serverName= request.getServerName();
-		String requestType= request.getMethod();
-		//String requestUrl= request.getRequestURL().toString();
-		String requestUrl= getRequestUrl(request);
-		int status= response.getStatus();
-		
-		if(joinPoint.getArgs()!=null && joinPoint.getArgs().length>0) {
-			for(int i=0;i<joinPoint.getArgs().length;i++) {
-				if(joinPoint.getArgs()[i] instanceof OptionHeader) {
-				test.append("Request Body : :" + getJsonString(joinPoint.getArgs()[i]).toString() )	;
-					
+		String serverName = request.getServerName();
+		String requestType = request.getMethod();
+		// String requestUrl= request.getRequestURL().toString();
+		String requestUrl = getRequestUrl(request);
+		int status = response.getStatus();
+
+		if (aopmethod.allow()) {
+			test.append("Target Method Name :" + methodName + "\n");
+			test.append("Request Method Type :" + requestType + "\n");
+			test.append("Server Name :" + serverName + "\n");
+			test.append("Request Url :" + requestUrl + "\n");
+			test.append("Status Code : " + status + "\n");
+			test.append("Time Taken : " + (endTime - startTime) + " milliSeconds" + "\n");
+
+			if (joinPoint.getArgs() != null && joinPoint.getArgs().length > 0) {
+				for (int i = 0; i < joinPoint.getArgs().length; i++) {
+					if (joinPoint.getArgs()[i] instanceof OptionHeader) {
+						test.append("Request Body : :" + getJsonString(joinPoint.getArgs()[i]).toString());
+
+					}
+
 				}
-				
 			}
-		}
-		if(aopmethod.allow()) {
-		test.append("Target Method Name :" + methodName + "\n");
-		test.append("Request Method Type :" + requestType + "\n");
-		test.append("Server Name :" + serverName +"\n");
-		test.append("Request Url :" + requestUrl + "\n");
-		test.append("Status Code : " + status + "\n");
-		test.append("Time Taken : "+(endTime- startTime) + " milliSeconds"+"\n");
 		}
 		System.out.println(test.toString());
 		return null;
-		
+
 	}
 
 	private String getJsonString(Object object) {
 		ObjectMapper mapper = new ObjectMapper();
-		String json="";
+		String json = "";
 		try {
-			json= mapper.writeValueAsString(object);
+			json = mapper.writeValueAsString(object);
 		} catch (JsonProcessingException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

@@ -44,6 +44,7 @@ public class AopAspectImplementation {
 		// String requestUrl= request.getRequestURL().toString();
 		String requestUrl = getRequestUrl(request);
 		int status = response.getStatus();
+		String queryParams= request.getQueryString();
 
 		if (aopmethod.allow()) {
 			test.append("Target Method Name :" + methodName + "\n");

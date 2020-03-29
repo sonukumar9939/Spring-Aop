@@ -57,7 +57,7 @@ public class AopAspectImplementation {
 			if (joinPoint.getArgs() != null && joinPoint.getArgs().length > 0) {
 				for (int i = 0; i < joinPoint.getArgs().length; i++) {
 					if (joinPoint.getArgs()[i] instanceof OptionHeader) {
-						test.append("Request Body : :" + getJsonString(joinPoint.getArgs()[i]).toString());
+						test.append("Request Body : :" + getJsonString(joinPoint.getArgs()[i]));
 
 					}
 

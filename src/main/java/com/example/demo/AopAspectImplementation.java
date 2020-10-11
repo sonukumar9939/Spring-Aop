@@ -1,6 +1,9 @@
 package com.example.demo;
 
 import java.lang.reflect.Method;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.TimeZone;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -9,6 +12,8 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -21,14 +26,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @Component
 public class AopAspectImplementation {
 	@Around(value = "@within(com.example.demo.AopAspects) || @annotation(com.example.demo.AopAspects)")
-	public String aroundAdvice(ProceedingJoinPoint joinPoint) throws Throwable {
+	public ResponseEntity<String> aroundAdvice(ProceedingJoinPoint joinPoint) throws Throwable {
 		HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
 				.getRequest();
 		HttpServletResponse response = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
 				.getResponse();
 
 		StringBuilder test = new StringBuilder();
-
+		
+		
 		MethodSignature signature = (MethodSignature) joinPoint.getSignature();
 		Method method = signature.getMethod();
 
@@ -45,7 +51,13 @@ public class AopAspectImplementation {
 		String requestUrl = getRequestUrl(request);
 		int status = response.getStatus();
 		String queryParams= request.getQueryString();
-
+		
+		/*
+		 * ContentCachingResponseWrapper responseWrapper = new
+		 * ContentCachingResponseWrapper(response); String test1= new
+		 * String(responseWrapper.getContentAsByteArray()); System.out.println("content"
+		 * +test1);
+		 */
 		if (aopmethod.allow()) {
 			test.append("Target Method Name :" + methodName + "\n");
 			test.append("Request Method Type :" + requestType + "\n");
@@ -57,20 +69,23 @@ public class AopAspectImplementation {
 			if (joinPoint.getArgs() != null && joinPoint.getArgs().length > 0) {
 				for (int i = 0; i < joinPoint.getArgs().length; i++) {
 					if (joinPoint.getArgs()[i] instanceof OptionHeader) {
-						test.append("Request Body : :" + getJsonString(joinPoint.getArgs()[i]));
+						test.append("Request Body :" + getJsonStringWithISODate(joinPoint.getArgs()[i]));
 
 					}
 
 				}
 			}
 		}
-		System.out.println(test.toString());
-		return null;
+		return new ResponseEntity<String>(test.toString(), HttpStatus.OK);
 
 	}
 
-	private String getJsonString(Object object) {
+	private String getJsonStringWithISODate(Object object) {
 		ObjectMapper mapper = new ObjectMapper();
+		DateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSSZ");
+		format.setTimeZone(TimeZone.getTimeZone("GMT+5:30"));
+		mapper.setDateFormat(format);
+		
 		String json = "";
 		try {
 			json = mapper.writeValueAsString(object);
